@@ -1,0 +1,16 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+	<h2>Rechercher un modèle de véhicule</h2>
+	<br>
+	<form method="POST" action="">
+		<label for="recherche-vehicule">Modèle de véhicule recherché :</label>
+		<input type="text" required="required" name="recherche-auto" size='20' maxlength='30'>
+		<br>
+		<button id="submit" class="btn btn-primary">Rechercher</button>
+	</form>
+{% endblock %}
+
+{% block title %}
+	Recherche
+{% endblock %}

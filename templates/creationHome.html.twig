@@ -1,0 +1,15 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+	<h2>Création d'une annonce</h2>
+	{{ form_start(formView) }}
+	<br>
+	{{ form_widget(formView) }}
+	<br>
+	<button type="submit" class="btn btn-success">Valider création</button>
+	{{ form_end(formView) }}
+{% endblock %}
+
+{% block title %}
+	Création Annonce
+{% endblock %}
