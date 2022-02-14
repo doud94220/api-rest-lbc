@@ -19,6 +19,17 @@ class AnnonceRepository extends ServiceEntityRepository
         parent::__construct($registry, Annonce::class);
     }
 
+    //Fait maison
+    public function trouverParModele($modele)
+    {
+        return $this->createQueryBuilder('annonce')
+            ->join('annonce.modeleVehicule', 'automobile')
+            ->where('automobile.modele = :val')
+            ->setParameter('val', $modele)
+            ->getQuery()
+            ->getResult();
+    }
+
     // /**
     //  * @return Annonce[] Returns an array of Annonce objects
     //  */

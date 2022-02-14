@@ -4,8 +4,10 @@ namespace App\Controller;
 
 use App\Entity\Annonce;
 use App\Form\AnnonceType;
+use App\Repository\AnnonceRepository;
 use App\Repository\AutomobileRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Twig\Node\RenderBlockNode;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -46,7 +48,7 @@ class AnnonceController extends AbstractController
     }
 
     /**
-     * @Route("/creation", name="annonce-creation-validation", methods={"POST"})
+     * @Route("/creation", name="annonce-creation-post", methods={"POST"})
      */
     public function creationValidation(Request $request, EntityManagerInterface $em): Response
     {
@@ -78,7 +80,7 @@ class AnnonceController extends AbstractController
      * 
      * @Route("/recherche", name="annonce-recherche-post", methods={"POST"})
      */
-    public function recherchePost(Request $request, AutomobileRepository $automobileRepository): Response
+    public function recherchePost(Request $request, AutomobileRepository $automobileRepository, AnnonceRepository $annonceRepository): Response
     {
         $dataForm = $request->request->all();
         $rechercheUtilisateur = $dataForm['recherche-auto'];
@@ -91,8 +93,22 @@ class AnnonceController extends AbstractController
         {
             $trouve = true;
             $goodSearch = $rechercheUtilisateur;
-            //return $this->json("Voila la marque et le modele de la voiture: " . $modeleVoiture->getMarque() . " " . $modeleVoiture->getModele());
-        } elseif (strpos($rechercheUtilisateur, " ") !== false) { //Si le modèle est composé de plusieurs mots
+        } elseif (strpos($rechercheUtilisateur, " ") == false) //Un seul mot dans la recherche utilisateur
+        {
+            //Verifier s'il n'y a pas un espace oublié avant le chiffre
+            $isMatch = preg_match('/[a-zA-Z]+[0-9]+/', $rechercheUtilisateur);
+
+            if ($isMatch) {
+                $nouvelleValeur = preg_replace('/(?<=\D)[0-9]/', ' $0', $rechercheUtilisateur);
+                $modeleVoiture = $automobileRepository->findOneBy(['modele' => $nouvelleValeur]);
+
+                if ($modeleVoiture) //On a trouvé le modele
+                {
+                    $trouve = true;
+                    $goodSearch = $nouvelleValeur;
+                }
+            }
+        } elseif (strpos($rechercheUtilisateur, " ") !== false) { //Plusieurs mots dans la recherche utilisateur
             $tableauDeMots = explode(" ", $rechercheUtilisateur);
 
             //Tester recherche sur chaque mot unitairement
@@ -102,7 +118,6 @@ class AnnonceController extends AbstractController
                 if ($modeleVoiture) {
                     $trouve = true;
                     $goodSearch = $valeur;
-                    //return $this->json("Voila la marque et le modele de la voiture: " . $modeleVoiture->getMarque() . " " . $modeleVoiture->getModele());
                 }
             }
 
@@ -122,7 +137,6 @@ class AnnonceController extends AbstractController
                     {
                         $trouve = true;
                         $goodSearch = $nouvelleValeur;
-                        //return $this->json("Voila la marque et le modele de la voiture: " . $modeleVoiture->getMarque() . " " . $modeleVoiture->getModele());
                     }
                 }
             }
@@ -145,7 +159,6 @@ class AnnonceController extends AbstractController
                         {
                             $trouve = true;
                             $goodSearch = $valeur;
-                            //return $this->json("Voila la marque et le modele de la voiture: " . $modeleVoiture->getMarque() . " " . $modeleVoiture->getModele());
                         }
                     }
                 } else //Sinon on n'a plus qu'un seul mot
@@ -156,17 +169,79 @@ class AnnonceController extends AbstractController
                     {
                         $trouve = true;
                         $goodSearch = $nouvelleRecherche;
-                        //return $this->json("Voila la marque et le modele de la voiture: " . $modeleVoiture->getMarque() . " " . $modeleVoiture->getModele());
                     }
                 }
             }
         }
 
         if ($trouve) {
-            //Faire une requet croisée sur la table annonce
-            //LAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+            $annoncesArray = $annonceRepository->trouverParModele($goodSearch);
+
+            if ($annoncesArray) {
+                $automobile = $automobileRepository->findOneBy(['modele' => $goodSearch]);
+                $messageSucces = "Vous recherchez des annonces pour une " . $automobile->getMarque() . " " . $automobile->getModele() . ". Voici le(s) annonce(s) correspondante(s) : ";
+
+                foreach ($annoncesArray as $annonce) {
+                    $messageSucces .= "[" . $annonce->getTitre() . " : " . $annonce->getContenu() . "]";
+                }
+
+                return $this->json($messageSucces);
+            } else {
+                $automobile = $automobileRepository->findOneBy(['modele' => $goodSearch]);
+                $messageEchec = "Vous recherchez des annonces pour une " . $automobile->getMarque() . " " . $automobile->getModele() . ", mais aucune annonce n'existe pour ce modèle. Désolé.";
+                return $this->json($messageEchec);
+            }
         } else {
             return $this->json("Le modele de vehicule est introuvable...");
+        }
+    }
+
+    /**
+     * 
+     * @Route("/modifier/accueil", name="annonce-modifier-accueil", methods={"GET"})
+     */
+    public function modifierAcceuil()
+    {
+        return $this->render('modifierAnnonceHome.html.twig');
+    }
+
+    /**
+     * 
+     * @Route("/modifier", name="annonce-modifier", methods={"POST"})
+     */
+    public function modifier(AnnonceRepository $annonceRepository, Request $request)
+    {
+        $dataForm = $request->request->all();
+        $id = $dataForm['id-annonce'];
+
+        $annonce = $annonceRepository->findOneBy(array('id' => $id));
+        $form = $this->createForm(AnnonceType::class, $annonce, [
+            'action' => $this->generateUrl('annonce-validation-modification')
+        ]);
+
+        if ($annonce) {
+            return $this->render('modifierAnnonce.html.twig', [
+                "formView" => $form->createView()
+            ]);
+        } else {
+            return $this->json("Pas d'annonce pour cet identifiant...");
+        }
+    }
+
+    /**
+     * 
+     * @Route("/validation/modification", name="annonce-validation-modification", methods={"POST"})
+     */
+    public function validationModification(Request $request, EntityManagerInterface $em)
+    {
+        $annonce = new Annonce();
+        $form = $this->createForm(AnnonceType::class, $annonce);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->persist($annonce);
+            $em->flush();
+            return $this->json("Annonce mise a jour !");
         }
     }
 }

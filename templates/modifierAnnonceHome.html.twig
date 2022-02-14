@@ -1,0 +1,16 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+	<h2>Accueil Modification</h2>
+	<br>
+	<form method="POST" action="{{ path('annonce-modifier') }}">
+		<label for="recherche-annonce">id de l'annonce à modifier :</label>
+		<input type="text" required="required" name="id-annonce" size='3' maxlength='3'>
+		<br>
+		<button id="submit" class="btn btn-primary">Trouver l'annonce</button>
+	</form>
+{% endblock %}
+
+{% block title %}
+	Modifier
+{% endblock %}
