@@ -215,8 +215,9 @@ class AnnonceController extends AbstractController
         $id = $dataForm['id-annonce'];
 
         $annonce = $annonceRepository->findOneBy(array('id' => $id));
+
         $form = $this->createForm(AnnonceType::class, $annonce, [
-            'action' => $this->generateUrl('annonce-validation-modification')
+            'action' => $this->generateUrl('annonce-validation-modification', array('id' => $id))
         ]);
 
         if ($annonce) {
@@ -230,18 +231,66 @@ class AnnonceController extends AbstractController
 
     /**
      * 
-     * @Route("/validation/modification", name="annonce-validation-modification", methods={"POST"})
+     * @Route("/validation/modification/{id}", name="annonce-validation-modification", methods={"POST"})
      */
-    public function validationModification(Request $request, EntityManagerInterface $em)
+    public function validationModification($id, Request $request, EntityManagerInterface $em, AnnonceRepository $annonceRepository)
     {
         $annonce = new Annonce();
         $form = $this->createForm(AnnonceType::class, $annonce);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $em->persist($annonce);
+            /** @var Annonce */
+            $annonceDuFormulaire = $form->getData();
+
+            $annonceEnBase = $annonceRepository->findOneBy(array('id' => $id));
+            $annonceEnBase->setTitre($annonceDuFormulaire->getTitre());
+            $annonceEnBase->setContenu($annonceDuFormulaire->getContenu());
+
+            $em->persist($annonceEnBase);
             $em->flush();
             return $this->json("Annonce mise a jour !");
+        } else {
+            //$erreurs = $form->getErrors();
+            //dd($erreurs);
+            return $this->json("Formulaire non valide...");
         }
+    }
+
+    ////////////// EN CHANTIER DESSOUS ///////////////////
+
+    /**
+     * 
+     * @Route("/modifier2", name="annonce-modifier-2", methods={"POST"})
+     */
+    public function modifier2(AnnonceRepository $annonceRepository, Request $request): Response
+    {
+        $dataForm = $request->request->all();
+        $id = $dataForm['id-annonce'];
+
+        $annonce = $annonceRepository->findOneBy(array('id' => $id));
+        $id = $annonce->getId();
+        $titre = $annonce->getTitre();
+        $contenu = $annonce->getContenu();
+
+        if ($annonce) {
+            return $this->render('modifierAnnoncePut.html.twig', [
+                "id" => $id,
+                'titre' => $titre,
+                'contenu' => $contenu
+            ]);
+        } else {
+            return $this->json("Pas d'annonce pour cet identifiant...");
+        }
+    }
+
+    /**
+     * @Route("/validation/modification/put/{id}", name="annonce-validation-modification-put", methods={"PUT"})
+     */
+    public function modificationPut($id, Request $request): Response
+    {
+        $request->request->all();
+        dd($request);
+        return $this->json("Annonce mise a jour en PUT");
     }
 }

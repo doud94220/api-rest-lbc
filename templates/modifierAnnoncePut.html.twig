@@ -1,0 +1,24 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+	<h2>Modification (en PUT) d'annonce :
+	</h2>
+	<br>
+	<form method="PUT" action="{{ path('annonce-validation-modification-put'), {'id': {{ id }}} }}">
+		<input type="hidden" name="_method" value="PUT"/>
+		<label for="id">id de l'annonce à modifier :</label>
+		<input type="text" required="required" readonly="readonly" name="id-annonce" size='3' maxlength='3' value="{{ id }}">
+		<br>
+		<label for="titre">Titre de l'annonce à modifier :</label>
+		<input type="text" required="required" name="titre" size='20' maxlength='20' value="{{ titre }}">
+		<br>
+		<label for="id">Contenu de l'annonce à modifier :</label>
+		<input type="text" required="required" name="contenu" size='300' maxlength='50' value="{{ contenu }}">
+		<br>
+		<button id="submit" class="btn btn-primary">Modifier l'annonce</button>
+	</form>
+{% endblock %}
+
+{% block title %}
+	Modification en PUT
+{% endblock %}
