@@ -27,7 +27,7 @@ class AnnonceController extends AbstractController
     // }
 
     /**
-     * @Route("/home", name="annonce-home")
+     * @Route("home", name="annonce-api-home")
      */
     public function home()
     {
@@ -205,6 +205,8 @@ class AnnonceController extends AbstractController
         return $this->render('modifierAnnonceHome.html.twig');
     }
 
+    //// PLUS UTILISEES LES 2 FONCTIONS EN DESSOUS
+
     /**
      * 
      * @Route("/modifier", name="annonce-modifier", methods={"POST"})
@@ -257,7 +259,7 @@ class AnnonceController extends AbstractController
         }
     }
 
-    ////////////// EN CHANTIER DESSOUS ///////////////////
+    ////////////// VOILA LES 2 NOUVELLES ///////////////////
 
     /**
      * 
@@ -285,10 +287,11 @@ class AnnonceController extends AbstractController
     }
 
     /**
-     * @Route("/validation/modification/put/{id}", name="annonce-validation-modification-put", methods={"PUT"})
+     * @Route("/validation/modification/put/{id}", name="annonce_edit", methods={"PUT"})
      */
     public function modificationPut($id, Request $request): Response
     {
+        dd('dans la route en PUT'); //Toujours erreur jQuery à cause de ce dd
         $request->request->all();
         dd($request);
         return $this->json("Annonce mise a jour en PUT");
