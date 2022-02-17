@@ -10,15 +10,15 @@
 	</h2>
 	<br>
 	{# <form action="{{ path('annonce_edit', {'id': 9}) }}"> #}
-	<input type="hidden" name="_method" value="PUT"/>
-	<label for="id">id de l'annonce à modifier :</label>
+	{# <input type="hidden" name="_method" value="PUT"/> #}
+		<label for="id"> id de l'annonce à modifier :</label>
 	<input id="id-annonce" type="text" required="required" readonly="readonly" name="id-annonce" size='3' maxlength='3' value="{{ id }}">
 	<br>
 	<label for="titre">Titre de l'annonce à modifier :</label>
-	<input type="text" required="required" name="titre" size='20' maxlength='20' value="{{ titre }}">
+	<input id="titre-annonce" type="text" required="required" name="titre" size='20' maxlength='30' value="{{ titre }}">
 	<br>
 	<label for="id">Contenu de l'annonce à modifier :</label>
-	<input type="text" required="required" name="contenu" size='300' maxlength='50' value="{{ contenu }}">
+	<input id="contenu-annonce" type="text" required="required" name="contenu" size='300' maxlength='500' value="{{ contenu }}">
 	<br>
 	<button id="submit" class="btn btn-primary">Modifier l'annonce</button>
 	{# </form> #}

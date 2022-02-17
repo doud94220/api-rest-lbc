@@ -1,0 +1,28 @@
+{% extends "base.html.twig" %}
+
+{% block javascripts %}
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+	<script type="text/javascript" src="/js/deleteByDeletePutMethod.js"></script>
+{% endblock %}
+
+{% block body %}
+	<h2>Suppression (en DELETE) d'annonce :
+	</h2>
+	<br>
+	<label for="id">
+		id de l'annonce à supprimer :</label>
+	<input id="id-annonce" type="text" required="required" readonly="readonly" name="id-annonce" size='3' maxlength='3' value="{{ id }}">
+	<br>
+	<label for="titre">Titre de l'annonce à supprimer :</label>
+	<input id="titre-annonce" type="text" required="required" readonly="readonly" name="titre" size='20' maxlength='30' value="{{ titre }}">
+	<br>
+	<label for="id">Contenu de l'annonce à supprimer :</label>
+	<input id="contenu-annonce" type="text" required="required" readonly="readonly" name="contenu" size='300' maxlength='500' value="{{ contenu }}">
+	<br>
+	<button id="submit" class="btn btn-primary">Supprimer l'annonce</button>
+	{# </form> #}
+{% endblock %}
+
+{% block title %}
+	Suppression en DELETE
+{% endblock %}
