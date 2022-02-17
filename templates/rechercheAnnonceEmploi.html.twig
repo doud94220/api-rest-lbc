@@ -1,0 +1,16 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+	<h2>Rechercher un emploi</h2>
+	<br>
+	<form method="POST" action="">
+		<label for="recherche-emploi">Recherche :</label>
+		<input type="text" required="required" name="recherche-emploi" size='20' maxlength='30'>
+		<br>
+		<button id="submit" class="btn btn-primary">Rechercher</button>
+	</form>
+{% endblock %}
+
+{% block title %}
+	Recherche Emploi
+{% endblock %}

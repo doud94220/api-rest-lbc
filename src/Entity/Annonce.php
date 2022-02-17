@@ -29,9 +29,14 @@ class Annonce
 
     /**
      * @ORM\ManyToOne(targetEntity=Automobile::class, inversedBy="annonces")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(nullable=true)
      */
     private $modeleVehicule;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $categorie;
 
     public function getId(): ?int
     {
@@ -70,6 +75,18 @@ class Annonce
     public function setModeleVehicule(?Automobile $modeleVehicule): self
     {
         $this->modeleVehicule = $modeleVehicule;
+
+        return $this;
+    }
+
+    public function getCategorie(): ?string
+    {
+        return $this->categorie;
+    }
+
+    public function setCategorie(string $categorie): self
+    {
+        $this->categorie = $categorie;
 
         return $this;
     }

@@ -4,27 +4,28 @@ namespace App\Controller;
 
 use App\Entity\Annonce;
 use App\Form\AnnonceType;
+use App\Form\AnnonceAutomobileType;
 use App\Repository\AnnonceRepository;
 use App\Repository\AutomobileRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Node\RenderBlockNode;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class AnnonceController extends AbstractController
 {
-    // /**
-    //  * @Route("/annonce", name="annonce")
-    //  */
-    // public function index(): Response
-    // {
-    //     return $this->json([
-    //         'message' => 'Welcome to your new controller!',
-    //         'path' => 'src/Controller/AnnonceController.php',
-    //     ]);
-    // }
+
+    //------------------------------------------------ ACCUEIL ------------------------------------------------
+
+    /**
+     * @Route("", name="racine")
+     */
+    public function racine()
+    {
+        return $this->render('home.html.twig');
+    }
 
     /**
      * @Route("home", name="annonce-api-home")
@@ -34,14 +35,50 @@ class AnnonceController extends AbstractController
         return $this->render('home.html.twig');
     }
 
+    //------------------------------------------------ CREATION ------------------------------------------------
+
+    /**
+     * @Route("/creation-automobile", name="annonce-creation-automobile", methods={"GET"})
+     */
+    public function creationAutomobile()
+    {
+        $annonce = new Annonce;
+        $form = $this->createForm(AnnonceAutomobileType::class, $annonce);
+
+        return $this->render('creationAutomobileHome.html.twig', [
+            'formView' => $form->createView()
+        ]);
+    }
+
+    /**
+     * @Route("/creation-automobile", name="annonce-creation-automobile-post", methods={"POST"})
+     */
+    public function creationValidation(Request $request, EntityManagerInterface $em): Response
+    {
+        $annonce = new Annonce;
+        $form = $this->createForm(AnnonceAutomobileType::class, $annonce);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->persist($annonce);
+            $em->flush();
+            $message = "Creation reussie de votre annonce " . $annonce->getTitre() . " !";
+            return $this->json($message);
+        } else {
+            $message = "Le formulaire est mal rempli. Merci de recommencer.";
+            return $this->json($message);
+        }
+    }
+
     /**
      * @Route("/creation", name="annonce-creation", methods={"GET"})
      */
     public function creation()
     {
         $annonce = new Annonce;
+        //dd('ici');
         $form = $this->createForm(AnnonceType::class, $annonce);
-
+        //dd('la');
         return $this->render('creationHome.html.twig', [
             'formView' => $form->createView()
         ]);
@@ -50,7 +87,7 @@ class AnnonceController extends AbstractController
     /**
      * @Route("/creation", name="annonce-creation-post", methods={"POST"})
      */
-    public function creationValidation(Request $request, EntityManagerInterface $em): Response
+    public function creationHorsAutoValidation(Request $request, EntityManagerInterface $em): Response
     {
         $annonce = new Annonce;
         $form = $this->createForm(AnnonceType::class, $annonce);
@@ -67,20 +104,22 @@ class AnnonceController extends AbstractController
         }
     }
 
+    //------------------------------------------------ RECHERCHE ------------------------------------------------
+
     /**
      * 
-     * @Route("/recherche", name="annonce-recherche", methods={"GET"})
+     * @Route("/recherche/automobile", name="annonce-recherche-automobile", methods={"GET"})
      */
-    public function recherche()
+    public function rechercheAutomobile()
     {
-        return $this->render('rechercheAnnonce.html.twig');
+        return $this->render('rechercheAnnonceAuto.html.twig');
     }
 
     /**
      * 
-     * @Route("/recherche", name="annonce-recherche-post", methods={"POST"})
+     * @Route("/recherche/automobile", name="annonce-recherche-automobile-post", methods={"POST"})
      */
-    public function recherchePost(Request $request, AutomobileRepository $automobileRepository, AnnonceRepository $annonceRepository): Response
+    public function rechercheAutomobilePost(Request $request, AutomobileRepository $automobileRepository, AnnonceRepository $annonceRepository): Response
     {
         $dataForm = $request->request->all();
         $rechercheUtilisateur = $dataForm['recherche-auto'];
@@ -198,68 +237,174 @@ class AnnonceController extends AbstractController
 
     /**
      * 
+     * @Route("/recherche/emploi", name="annonce-recherche-emploi", methods={"GET"})
+     */
+    public function rechercheEmploi()
+    {
+        return $this->render('rechercheAnnonceEmploi.html.twig');
+    }
+
+    /**
+     * 
+     * @Route("/recherche/emploi", name="annonce-recherche-emploi-post", methods={"POST"})
+     */
+    public function rechercheEmploiPost(Request $request, AnnonceRepository $annonceRepository)
+    {
+        $dataForm = $request->request->all();
+        $rechercheUtilisateur = $dataForm['recherche-emploi'];
+        $emploi = $annonceRepository->findOneBy(['titre' => $rechercheUtilisateur, 'categorie' => "Emploi"]);
+
+        $trouve = false;
+        $goodSearch = '';
+        $searchInformation = '';
+
+        if ($emploi) //On trouve un ou des emplois
+        {
+            $trouve = true;
+            $goodSearch = $rechercheUtilisateur;
+        } elseif (strpos($rechercheUtilisateur, " ") == false) //Si il n'y a qu'un seul mot dans la recherche
+        {
+            /** @var Annonce[] */
+            $annonceEmploi = $annonceRepository->trouverEmploiParMot($rechercheUtilisateur); //Recherche avec "like"
+
+            if ($annonceEmploi) {
+                $trouve = true;
+                $goodSearch = $rechercheUtilisateur;
+                $searchInformation = "LIKE";
+            }
+        } elseif (strpos($rechercheUtilisateur, " ") !== false) //Si y'a plusieurs mots dans la recherche
+        {
+            $tableauDeMots = explode(" ", $rechercheUtilisateur);
+
+            //Tester recherche sur chaque mot unitairement
+            foreach ($tableauDeMots as $valeur) {
+
+                $annonceEmploi = $annonceRepository->trouverEmploiParMot($valeur); //Recherche avec "like"
+
+                if ($annonceEmploi) {
+                    $trouve = true;
+                    $goodSearch = $valeur;
+                    $searchInformation = "LIKE";
+                }
+            }
+        }
+
+        if ($trouve) {
+
+            if ($searchInformation == '') {
+                $annoncesArray = $annonceRepository->findBy(['titre' => $goodSearch]);
+            } elseif ($searchInformation == 'LIKE') {
+                $annoncesArray = $annonceRepository->trouverEmploiParMot($goodSearch);
+            } else {
+                return $this->json("Problem dans le programme. Variable searchInformation mal renseigne...");
+            }
+
+            if ($annoncesArray) {
+                $messageSucces = "Voici le(s) emploi(s) correspondant a votre recherche : ";
+
+                foreach ($annoncesArray as $annonce) {
+                    $messageSucces .= "[" . $annonce->getTitre() . " : " . $annonce->getContenu() . "]";
+                }
+
+                return $this->json($messageSucces);
+            } else {
+                $this->json("Probleme etrange, la recherche qui avait donne quelques chose, ne retourne finalement rien...");
+            }
+        } else {
+            return $this->json("Aucune offre d emploi ne correspond a votre rercherche...");
+        }
+    }
+
+    /**
+     * 
+     * @Route("/recherche/immobilier", name="annonce-recherche-immobilier", methods={"GET"})
+     */
+    public function rechercheImmobilier()
+    {
+        return $this->render('rechercheAnnonceImmobilier.html.twig');
+    }
+
+    /**
+     * 
+     * @Route("/recherche/immobilier", name="annonce-recherche-immobilier-post", methods={"POST"})
+     */
+    public function rechercheImmobilierPost(Request $request, AnnonceRepository $annonceRepository)
+    {
+        $dataForm = $request->request->all();
+        $rechercheUtilisateur = $dataForm['recherche-immobilier'];
+        $emploi = $annonceRepository->findOneBy(['titre' => $rechercheUtilisateur, 'categorie' => "Immobilier"]);
+
+        $trouve = false;
+        $goodSearch = '';
+        $searchInformation = '';
+
+        if ($emploi) //On trouve un ou des offres immobilières
+        {
+            $trouve = true;
+            $goodSearch = $rechercheUtilisateur;
+        } elseif (strpos($rechercheUtilisateur, " ") == false) //Si il n'y a qu'un seul mot dans la recherche
+        {
+            /** @var Annonce[] */
+            $annonceImmo = $annonceRepository->trouverImmoParMot($rechercheUtilisateur); //Recherche avec "like"
+
+            if ($annonceImmo) {
+                $trouve = true;
+                $goodSearch = $rechercheUtilisateur;
+                $searchInformation = "LIKE";
+            }
+        } elseif (strpos($rechercheUtilisateur, " ") !== false) //Si y'a plusieurs mots dans la recherche
+        {
+            $tableauDeMots = explode(" ", $rechercheUtilisateur);
+
+            //Tester recherche sur chaque mot unitairement
+            foreach ($tableauDeMots as $valeur) {
+
+                $annonceImmo = $annonceRepository->trouverImmoParMot($valeur); //Recherche avec "like"
+
+                if ($annonceImmo) {
+                    $trouve = true;
+                    $goodSearch = $valeur;
+                    $searchInformation = "LIKE";
+                }
+            }
+        }
+
+        if ($trouve) {
+
+            if ($searchInformation == '') {
+                $annoncesArray = $annonceRepository->findBy(['titre' => $goodSearch]);
+            } elseif ($searchInformation == 'LIKE') {
+                $annoncesArray = $annonceRepository->trouverImmoParMot($goodSearch);
+            } else {
+                return $this->json("Problem dans le programme. Variable searchInformation mal renseigne...");
+            }
+
+            if ($annoncesArray) {
+                $messageSucces = "Voici le(s) offre(s) immobiliere(s) correspondantes a votre recherche : ";
+
+                foreach ($annoncesArray as $annonce) {
+                    $messageSucces .= "[" . $annonce->getTitre() . " : " . $annonce->getContenu() . "]";
+                }
+
+                return $this->json($messageSucces);
+            } else {
+                $this->json("Probleme etrange, la recherche qui avait donne quelques chose, ne retourne finalement rien...");
+            }
+        } else {
+            return $this->json("Aucune offre immobiliere ne correspond a votre rercherche...");
+        }
+    }
+
+    //------------------------------------------------ MODIFICATION ------------------------------------------------
+
+    /**
+     * 
      * @Route("/modifier/accueil", name="annonce-modifier-accueil", methods={"GET"})
      */
     public function modifierAcceuil()
     {
         return $this->render('modifierAnnonceHome.html.twig');
     }
-
-    //// PLUS UTILISEES LES 2 FONCTIONS EN DESSOUS
-
-    // /**
-    //  * 
-    //  * @Route("/modifier", name="annonce-modifier", methods={"POST"})
-    //  */
-    // public function modifier(AnnonceRepository $annonceRepository, Request $request)
-    // {
-    //     $dataForm = $request->request->all();
-    //     $id = $dataForm['id-annonce'];
-
-    //     $annonce = $annonceRepository->findOneBy(array('id' => $id));
-
-    //     $form = $this->createForm(AnnonceType::class, $annonce, [
-    //         'action' => $this->generateUrl('annonce-validation-modification', array('id' => $id))
-    //     ]);
-
-    //     if ($annonce) {
-    //         return $this->render('modifierAnnonce.html.twig', [
-    //             "formView" => $form->createView()
-    //         ]);
-    //     } else {
-    //         return $this->json("Pas d'annonce pour cet identifiant...");
-    //     }
-    // }
-
-    // /**
-    //  * 
-    //  * @Route("/validation/modification/{id}", name="annonce-validation-modification", methods={"POST"})
-    //  */
-    // public function validationModification($id, Request $request, EntityManagerInterface $em, AnnonceRepository $annonceRepository)
-    // {
-    //     $annonce = new Annonce();
-    //     $form = $this->createForm(AnnonceType::class, $annonce);
-    //     $form->handleRequest($request);
-
-    //     if ($form->isSubmitted() && $form->isValid()) {
-    //         /** @var Annonce */
-    //         $annonceDuFormulaire = $form->getData();
-
-    //         $annonceEnBase = $annonceRepository->findOneBy(array('id' => $id));
-    //         $annonceEnBase->setTitre($annonceDuFormulaire->getTitre());
-    //         $annonceEnBase->setContenu($annonceDuFormulaire->getContenu());
-
-    //         $em->persist($annonceEnBase);
-    //         $em->flush();
-    //         return $this->json("Annonce mise a jour !");
-    //     } else {
-    //         //$erreurs = $form->getErrors();
-    //         //dd($erreurs);
-    //         return $this->json("Formulaire non valide...");
-    //     }
-    // }
-
-    ////////////// VOILA LES 2 NOUVELLES ///////////////////
 
     /**
      * 
@@ -304,6 +449,8 @@ class AnnonceController extends AbstractController
 
         return $this->json("Annonce mise a jour en base en methode PUT !");
     }
+
+    //------------------------------------------------ SUPPRESSION ------------------------------------------------
 
     /**
      * @Route("/supprimer/accueil", name="annonce-supprimer-accueil", methods={"GET"})

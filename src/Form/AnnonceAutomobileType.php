@@ -3,13 +3,16 @@
 namespace App\Form;
 
 use App\Entity\Annonce;
+use App\Entity\Automobile;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 
-class AnnonceType extends AbstractType
+class AnnonceAutomobileType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -25,9 +28,14 @@ class AnnonceType extends AbstractType
             ->add('categorie', ChoiceType::class, [
                 'label' => 'Catégorie : ',
                 'choices' => [
-                    "Emploi" => "Emploi",
-                    "Immobilier" => "Immobilier"
+                    "Automobile" => "Automobile"
                 ]
+            ])
+            ->add('modeleVehicule', EntityType::class, [
+                'class' => Automobile::class,
+                'choice_label' => function (Automobile $automobile) {
+                    return $automobile->getMarque() . ' ' . $automobile->getModele();
+                }
             ]);
     }
 
