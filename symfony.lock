@@ -117,9 +117,6 @@
     "laminas/laminas-code": {
         "version": "4.5.1"
     },
-    "monolog/monolog": {
-        "version": "2.3.5"
-    },
     "nikic/php-parser": {
         "version": "v4.13.2"
     },
@@ -246,21 +243,6 @@
             "version": "1.0",
             "ref": "fadbfe33303a76e25cb63401050439aa9b1a9c7f"
         }
-    },
-    "symfony/monolog-bridge": {
-        "version": "v5.4.3"
-    },
-    "symfony/monolog-bundle": {
-        "version": "3.7",
-        "recipe": {
-            "repo": "github.com/symfony/recipes",
-            "branch": "master",
-            "version": "3.7",
-            "ref": "213676c4ec929f046dfde5ea8e97625b81bc0578"
-        },
-        "files": [
-            "./config/packages/monolog.yaml"
-        ]
     },
     "symfony/options-resolver": {
         "version": "v5.4.3"

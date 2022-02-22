@@ -9,5 +9,4 @@ return [
     Twig\Extra\TwigExtraBundle\TwigExtraBundle::class => ['all' => true],
     JMS\SerializerBundle\JMSSerializerBundle::class => ['all' => true],
     FOS\RestBundle\FOSRestBundle::class => ['all' => true],
-    Symfony\Bundle\MonologBundle\MonologBundle::class => ['all' => true],
 ];
