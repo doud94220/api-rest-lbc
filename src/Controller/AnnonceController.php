@@ -62,7 +62,7 @@ class AnnonceController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $em->persist($annonce);
             $em->flush();
-            $message = "Creation reussie de votre annonce " . $annonce->getTitre() . " !";
+            $message = "Creation reussie de votre annonce " . $annonce->getTitre() . " ! L'id de l'annonce est : " . $annonce->getId();
             return $this->json($message);
         } else {
             $message = "Le formulaire est mal rempli. Merci de recommencer.";
@@ -96,7 +96,7 @@ class AnnonceController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $em->persist($annonce);
             $em->flush();
-            $message = "Creation reussie de votre annonce " . $annonce->getTitre() . " !";
+            $message = "Creation reussie de votre annonce " . $annonce->getTitre() . " ! L'id de l'annonce est : " . $annonce->getId();
             return $this->json($message);
         } else {
             $message = "Le formulaire est mal rempli. Merci de recommencer.";
