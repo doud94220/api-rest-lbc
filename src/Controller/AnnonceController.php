@@ -17,7 +17,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 class AnnonceController extends AbstractController
 {
 
-    //------------------------------------------------ ACCUEIL ------------------------------------------------
+    //------------------------------------------------- ACCUEIL ------------------------------------------------
 
     /**
      * @Route("", name="racine")
