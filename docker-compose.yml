@@ -1,21 +1,53 @@
-version: '3'
+version: '3.8'
 
 services:
-###> doctrine/doctrine-bundle ###
-  database:
-    image: postgres:${POSTGRES_VERSION:-13}-alpine
+  db:
+    build:
+      context: ./docker/database
+    container_name: api-rest-lbc
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-app}
-      # You should definitely change the password in production
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeMe}
-      POSTGRES_USER: ${POSTGRES_USER:-symfony}
+      MYSQL_ROOT_PASSWORD:
+      MYSQL_DATABASE: symapirestlbc
+      MYSQL_USER: root
+      MYSQL_PASSWORD:
+    ports:
+      - "3306:3306"
     volumes:
-      - db-data:/var/lib/postgresql/data:rw
-      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      # - ./docker/db/data:/var/lib/postgresql/data:rw
-###< doctrine/doctrine-bundle ###
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/data:/var/lib/mysql
+    networks:
+      - symfony
 
-volumes:
-###> doctrine/doctrine-bundle ###
-  db-data:
-###< doctrine/doctrine-bundle ###
+  symapirestlbc:
+    build:
+      context: ./docker/apache
+    container_name: symapirestlbc_symfony
+    depends_on:
+      - db
+    volumes:
+      - .:/var/www/html/api-rest-lbc/
+    ports:
+      - 2520:8050
+    restart: always
+    entrypoint: sh /var/www/html/api-rest-lbc/docker/apache/start_server.sh
+    networks:
+      - symfony
+
+  phpmyadmin:
+    depends_on:
+      - db
+    image: phpmyadmin/phpmyadmin
+    container_name: api-rest-lbc_phpmyadmin
+    links:
+      - db
+    restart: always
+    ports:
+      - 8089:80
+    environment:
+      PMA_HOST: root
+      MYSQL_ROOT_PASSWORD:
+    networks:
+      - symfony
+
+networks:
+  symfony:
